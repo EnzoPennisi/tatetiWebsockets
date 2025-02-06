@@ -8,20 +8,17 @@ import { v4 as uuidv4 } from 'uuid';
 function App() {
 
   const [game, setGame] = useState<Game | null>(null);
-  const [client, setClient] = useState<Client | null>(null);
   const [playerSymbol, setPlayerSymbol] = useState<string>("");
   const [canPlay, setCanPlay] = useState<boolean>(false);
 
+  const clientRef = useRef<Client | null>(null);
   const clientIdRef = useRef<string>(uuidv4());
-  console.log('clientIdRef', clientIdRef.current);
 
   useEffect(() => {
-    const client = connect();
+    connect();
 
     return () => {
-      if (client) {
-        client.deactivate();
-      }
+      disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -36,41 +33,51 @@ function App() {
     client.onConnect = () => {
       console.log('Connected to the server');
 
-      client.subscribe('/topic/game', (message) => {
-        const game: Game = JSON.parse(message.body);
-        setGame(game);
-
-        if (game.playerXSessionId === clientIdRef.current) {
-          setPlayerSymbol('X');
-        } else if (game.playerOSessionId === clientIdRef.current) {
-          setPlayerSymbol('O');
-        }
-
-        //Verify is both players are connected
-        if (game.playerXSessionId && game.playerOSessionId) {
-          setCanPlay(true);
-        } else {
-          setCanPlay(false);
-        }
-
-      });
-
-      // Join the game with the clientId
-      client.publish({
-        destination: '/app/joinGame',
-        body: JSON.stringify({ clientId: clientIdRef.current })
-      });
+      subscribeToGame(client);
+      joinGame(client);
     };
 
     client.activate();
-    setClient(client);
-    return client;
+    clientRef.current = client;
   }
 
-  const startNewGame = (client: Client | null) => {
+  const disconnect = () => {
+    if (clientRef.current) {
+      clientRef.current.deactivate();
+    }
+  }
+
+  const subscribeToGame = (client: Client) => {
+    // Initial handshake with the server
+    client.subscribe('/topic/game', (message) => {
+      const gameData: Game = JSON.parse(message.body);
+      setGame(gameData);
+      updatePlayerState(gameData);
+    });
+  }
+
+  const joinGame = (client: Client) => {
+    client.publish({
+      destination: '/app/joinGame',
+      body: JSON.stringify({ clientId: clientIdRef.current })
+    });
+  }
+
+  const updatePlayerState = (gameData: Game) => {
+    if (gameData.playerXSessionId === clientIdRef.current) {
+      setPlayerSymbol('X');
+    } else if (gameData.playerOSessionId === clientIdRef.current) {
+      setPlayerSymbol('O');
+    }
+
+    const bothPlayersConnected = gameData.playerXSessionId && gameData.playerOSessionId;
+    setCanPlay(!!bothPlayersConnected);
+  }
+
+  const startNewGame = () => {
     console.log('Starting a new game');
-    if (client && client.connected) {
-      client.publish({
+    if (clientRef.current && clientRef.current.connected) {
+      clientRef.current.publish({
         destination: '/app/startNewGame',
         body: JSON.stringify({})
       })
@@ -79,15 +86,7 @@ function App() {
 
   const makeMove = (position: number) => {
 
-    if (
-      game &&
-      canPlay &&
-      game.board[position] === "" &&
-      !game.gameOver &&
-      client &&
-      client.connected &&
-      playerSymbol === game.currentPlayer
-    ) {
+    if (canMakeMove(position)) {
 
       const move: Move = {
         position,
@@ -95,7 +94,7 @@ function App() {
         clientId: clientIdRef.current
       };
 
-      client.publish({
+      clientRef.current?.publish({
         destination: '/app/move',
         body: JSON.stringify(move)
       });
@@ -103,6 +102,18 @@ function App() {
     } else {
       console.log('No es su turno o el juego ha terminado');
     }
+  }
+
+  const canMakeMove = (position: number) => {
+    return (
+      game &&
+      canPlay &&
+      game.board[position] === "" &&
+      !game.gameOver &&
+      clientRef.current &&
+      clientRef.current.connected &&
+      playerSymbol === game.currentPlayer
+    )
   }
 
 
@@ -116,12 +127,16 @@ function App() {
       }
 
       {game?.gameOver &&
-        <button onClick={() => startNewGame(client)} style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          marginTop: '20px',
-          cursor: 'pointer'
-        }}>Empezar nuevo juego</button>
+        <button
+          onClick={() => startNewGame()}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            marginTop: '20px',
+            cursor: 'pointer'
+          }}>
+          Empezar nuevo juego
+        </button>
       }
     </div>
   )
