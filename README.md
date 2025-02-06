@@ -52,6 +52,9 @@ La aplicación se abrirá en http://localhost:5173
 
 ## 📸 Capturas de la aplicacion en funcionamiento
 ![alt text](readmeImgs/1.PNG)
+
 ![alt text](readmeImgs/2.PNG)
+
 ![alt text](readmeImgs/3.PNG)
+
 ![alt text](readmeImgs/4.PNG)
