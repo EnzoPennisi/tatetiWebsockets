@@ -118,27 +118,25 @@ function App() {
 
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      {game &&
-        <>
-          <Status game={game} playerSymbol={playerSymbol} canPlay={canPlay} />
-          <Board game={game} makeMove={makeMove} />
-        </>
-      }
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
 
-      {game?.gameOver &&
-        <button
-          onClick={() => startNewGame()}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            marginTop: '20px',
-            cursor: 'pointer'
-          }}>
-          Empezar nuevo juego
-        </button>
-      }
-    </div>
+      <div className='w-full max-w-md'>
+        {game &&
+          <>
+            <Status game={game} playerSymbol={playerSymbol} canPlay={canPlay} />
+            <Board game={game} makeMove={makeMove} />
+          </>
+        }
+
+        {game?.gameOver &&
+          <button
+            onClick={() => startNewGame()}
+            className='mt-6 w-full bg-primary text-white  bg-black  rounded-md font-medium py-2 px-4 cursor-pointer hover:bg-gray-800 transition-all duration-300'>
+            Empezar nuevo juego
+          </button>
+        }
+      </div>
+    </main>
   )
 }
 

@@ -7,13 +7,7 @@ interface BoardProps {
 
 export function Board({ game, makeMove }: BoardProps) {
     return (
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 100px)',
-            gap: '10px',
-            justifyContent: 'center',
-            marginTop: '20px'
-        }}>
+        <div className="grid grid-cols-3 gap-2">
             {game.board && game.board.map((value, index) => (
                 <Cell key={index} value={value} index={index} makeMove={makeMove} />
             ))}
