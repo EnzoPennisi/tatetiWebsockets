@@ -11,9 +11,9 @@ import lombok.Setter;
 @Setter
 public class Game {
     private String[] board = new String[9];
-    private String currentPlayer = "X";
+    private Player currentPlayer = Player.X;
     private boolean isGameOver = false;
-    private String winner;
+    private Player winner;
 
     private String playerXSessionId;
     private String playerOSessionId;

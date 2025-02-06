@@ -11,6 +11,6 @@ import lombok.Setter;
 @Setter
 public class Move {
     private int Position;
-    private String Player;
+    private Player Player;
     private String clientId;
 }
