@@ -51,7 +51,7 @@ La aplicación se abrirá en http://localhost:5173
 6. Para comenzar una nueva partida, haz clic en "Empezar nuevo juego" después de que termine la partida actual.
 
 ## 📸 Capturas de la aplicacion en funcionamiento
-![alt text](readmeImgs/1.png)
-![alt text](readmeImgs/2.png)
-![alt text](readmeImgs/3.png)
-![alt text](readmeImgs/4.png)
+![alt text](readmeImgs/1.PNG)
+![alt text](readmeImgs/2.PNG)
+![alt text](readmeImgs/3.PNG)
+![alt text](readmeImgs/4.PNG)
