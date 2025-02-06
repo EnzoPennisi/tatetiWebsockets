@@ -12,4 +12,5 @@ import lombok.Setter;
 public class Move {
     private int Position;
     private String Player;
+    private String clientId;
 }

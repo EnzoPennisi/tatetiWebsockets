@@ -14,4 +14,7 @@ public class Game {
     private String currentPlayer = "X";
     private boolean isGameOver = false;
     private String winner;
+
+    private String playerXSessionId;
+    private String playerOSessionId;
 }

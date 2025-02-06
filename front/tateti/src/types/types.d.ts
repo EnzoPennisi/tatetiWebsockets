@@ -3,9 +3,12 @@ interface Game {
     currentPlayer: string;
     gameOver: boolean;
     winner: string;
+    playerXSessionId: string;
+    playerOSessionId: string;
 }
 
 interface Move {
     position: number;
     player: string;
+    clientId: string;
 }

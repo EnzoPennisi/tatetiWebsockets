@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './App.css'
 import { Client } from "@stomp/stompjs";
 import { Status } from './components/Status';
 import { Board } from './components/Board';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
 
   const [game, setGame] = useState<Game | null>(null);
   const [client, setClient] = useState<Client | null>(null);
+  const [playerSymbol, setPlayerSymbol] = useState<string>("");
+  const [canPlay, setCanPlay] = useState<boolean>(false);
+
+  const clientIdRef = useRef<string>(uuidv4());
+  console.log('clientIdRef', clientIdRef.current);
 
   useEffect(() => {
     const client = connect();
@@ -31,13 +37,29 @@ function App() {
       console.log('Connected to the server');
 
       client.subscribe('/topic/game', (message) => {
-        console.log('Received a message from the server');
-        const game = JSON.parse(message.body);
-        console.log(game);
+        const game: Game = JSON.parse(message.body);
         setGame(game);
+
+        if (game.playerXSessionId === clientIdRef.current) {
+          setPlayerSymbol('X');
+        } else if (game.playerOSessionId === clientIdRef.current) {
+          setPlayerSymbol('O');
+        }
+
+        //Verify is both players are connected
+        if (game.playerXSessionId && game.playerOSessionId) {
+          setCanPlay(true);
+        } else {
+          setCanPlay(false);
+        }
+
       });
 
-      startNewGame(client);
+      // Join the game with the clientId
+      client.publish({
+        destination: '/app/joinGame',
+        body: JSON.stringify({ clientId: clientIdRef.current })
+      });
     };
 
     client.activate();
@@ -57,18 +79,29 @@ function App() {
 
   const makeMove = (position: number) => {
 
-    if (game?.board[position] === "" && !game.gameOver) {
+    if (
+      game &&
+      canPlay &&
+      game.board[position] === "" &&
+      !game.gameOver &&
+      client &&
+      client.connected &&
+      playerSymbol === game.currentPlayer
+    ) {
+
       const move: Move = {
         position,
-        player: game.currentPlayer
+        player: playerSymbol,
+        clientId: clientIdRef.current
       };
 
-      if (client && client.connected) {
-        client.publish({
-          destination: '/app/move',
-          body: JSON.stringify(move)
-        });
-      }
+      client.publish({
+        destination: '/app/move',
+        body: JSON.stringify(move)
+      });
+
+    } else {
+      console.log('No es su turno o el juego ha terminado');
     }
   }
 
@@ -77,7 +110,7 @@ function App() {
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
       {game &&
         <>
-          <Status game={game} />
+          <Status game={game} playerSymbol={playerSymbol} canPlay={canPlay} />
           <Board game={game} makeMove={makeMove} />
         </>
       }
